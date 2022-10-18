@@ -1,6 +1,7 @@
 # graper
 
 Toolkit for calculating winemaking procedures. 
+Built using Vue and Golang.
 
 ## Monitor Ferment from Refractometer Readings
 A set of calculations are performed, first to calculate the initial gravity from the inital brix:
