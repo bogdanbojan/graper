@@ -6,11 +6,12 @@ import (
 )
 
 type ferment struct {
-	initial_gravity   float64
-	current_gravity   float64
-	alcohol_by_volume float64
-	residual_sugar    float64
-	si                float64
+	initial_gravity    float64
+	current_gravity    float64
+	current_gravity_bh float64
+	true_brix          float64
+	residual_sugar     float64
+	current_alchol     float64
 }
 
 func main() {
@@ -20,39 +21,30 @@ func main() {
 
 // monitorFerment monitors ferment from the refractometer readings.
 func monitorFerment(ib float64, cb float64) ferment {
-	// Initial gravity.
 	ig := 1.000898 + 0.003859118*ib + 0.00001370735*math.Pow(ib, 2) + 0.00000003742517*math.Pow(ib, 3)
-
-	// Current gravity based on ib and cb.
 	cg := 1.001843 - 0.002318474*ib - 0.000007775*math.Pow(ib, 2) - 0.000000034*math.Pow(ib, 3) + 0.00574*cb + 0.00003344*math.Pow(cb, 2) + 0.000000086*math.Pow(cb, 3)
-
-	// Alcohol by volume.
 	abv := 0.93 * ((1017.5596 - (277.4 * cg) + (1.33302+0.001427193*cb+0.000005791157*math.Pow(cb, 2))*((937.8135*(1.33302+0.001427193*cb+0.000005791157*math.Pow(cb, 2)))-1805.1228)) * (cg / 0.794))
+	bh := 143.254*cg*cg*cg - 648.670*cg*cg + 1125.805*cg - 620.389
+	si := (2*math.Sqrt(626159497)*math.Sqrt(35209254016727200*abv+448667639342033000) - 33520822512398) / 841662180975
+	remsg := cg - (1 - (si / 1000)) + 1
+	tb := 143.254*remsg*remsg*remsg - 648.670*remsg*remsg + 1125.805*remsg - 620.389
+	rs := tb * cg * 10
 
-	// True brix
-	// TODO: Check that this actually works. The above formula as well.
-	tb := (97*ib + 1200*cb) / 1297
+	a := math.Round(ig*10000) / 10000
+	b := math.Round(cg*10000) / 10000
+	c := math.Round(rs*1) / 1
+	d := math.Round(abv*10) / 10
+	e := math.Round(bh*10) / 10
+	f := math.Round(tb*10) / 10
 
-	// temp_tb := (ib - cb) / 1.8
-
-	fmt.Printf("tb : %v", tb)
-	fmt.Println()
-	// fmt.Printf("temp_tb : %v", temp_tb)
-
-	rs := cg * tb
-
-	si := (2*math.Sqrt(626159497)*math.Sqrt(35209254016727200*abv+448667639342033000) - 33520822512398) / 8416621809752
-
-	corrected_sg := cg - (1 - (si / 1000)) + 1
-
-	ferment := ferment{}
-	ferment.initial_gravity = ig
-	ferment.current_gravity = cg
-	ferment.alcohol_by_volume = abv
-	ferment.residual_sugar = rs
-	ferment.si = corrected_sg
-
-	return ferment
+	return ferment{
+		initial_gravity:    a,
+		current_gravity:    b,
+		current_gravity_bh: c,
+		true_brix:          d,
+		residual_sugar:     e,
+		current_alchol:     f,
+	}
 
 }
 
